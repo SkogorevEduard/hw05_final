@@ -37,15 +37,12 @@ def profile(request, username):
             author=author,
             user=request.user
         ).exists()
-        context = {
+    else:
+        following = False
+    context = {
             'author': author,
             'page_obj': page_obj,
             'following': following
-        }
-    else:
-        context = {
-            'author': author,
-            'page_obj': page_obj,
         }
     return render(request, 'posts/profile.html', context)
 

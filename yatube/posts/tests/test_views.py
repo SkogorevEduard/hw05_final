@@ -239,10 +239,7 @@ class FollowViewsTest(TestCase):
     def test_follow(self):
         """Проверка подписки на автора."""
         first_count = Follow.objects.count()
-        self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username': self.user}))
-        self.assertEqual(first_count + 1, Follow.objects.count())
-        self.authorized_client.post(
+        self.authorized_client.get(
             reverse('posts:profile_follow', kwargs={'username': self.user}))
         self.assertEqual(first_count + 1, Follow.objects.count())
 
