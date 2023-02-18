@@ -242,6 +242,9 @@ class FollowViewsTest(TestCase):
         self.authorized_client.post(
             reverse('posts:profile_follow', kwargs={'username': self.user}))
         self.assertEqual(first_count + 1, Follow.objects.count())
+        self.authorized_client.post(
+            reverse('posts:profile_follow', kwargs={'username': self.user}))
+        self.assertEqual(first_count + 1, Follow.objects.count())
 
     def test_unfollow(self):
         """Проверка отписки от автора."""
