@@ -40,10 +40,10 @@ def profile(request, username):
     else:
         following = False
     context = {
-            'author': author,
-            'page_obj': page_obj,
-            'following': following
-        }
+        'author': author,
+        'page_obj': page_obj,
+        'following': following
+    }
     return render(request, 'posts/profile.html', context)
 
 
