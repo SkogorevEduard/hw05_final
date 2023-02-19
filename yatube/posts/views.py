@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
 from .forms import PostForm, CommentForm
-from .models import Post, Group, User, Comment, Follow
+from .models import Post, Group, User, Follow
 from .utils import paginate
 
 
@@ -11,14 +11,14 @@ def index(request):
     '''View-функция для главной страницы.'''
     post_list = Post.objects.all()
     page_obj = paginate(request, post_list)
-    context = {'page_obj': page_obj, }
+    context = {'page_obj': page_obj}
     return render(request, 'posts/index.html', context)
 
 
 def group_posts(request, slug):
     '''View-функция для страницы, на которой будут посты.'''
     group = get_object_or_404(Group, slug=slug)
-    group_list = Post.objects.filter(group=group).select_related('group')
+    group_list = group.posts.all()
     page_obj = paginate(request, group_list)
     context = {
         'group': group,
@@ -30,15 +30,14 @@ def group_posts(request, slug):
 def profile(request, username):
     '''View-функция для страницы, на которой будет профайл пользователя.'''
     author = get_object_or_404(User, username=username)
-    post_list = Post.objects.filter(author=author)
+    post_list = author.posts.all()
     page_obj = paginate(request, post_list)
+    following = False
     if request.user.is_authenticated:
         following = Follow.objects.filter(
             author=author,
             user=request.user
         ).exists()
-    else:
-        following = False
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -51,7 +50,7 @@ def post_detail(request, post_id):
     '''View-функция для просмотра поста.'''
     post = get_object_or_404(
         Post.objects.select_related('author', 'group'), id=post_id)
-    comments = Comment.objects.filter(post=post)
+    comments = post.comments.all()
     form = CommentForm()
     context = {
         'post': post,
@@ -113,7 +112,7 @@ def follow_index(request):
     '''View-функция для страниц избранных авторов.'''
     post_list = Post.objects.filter(author__following__user=request.user)
     page_obj = paginate(request, post_list)
-    context = {'page_obj': page_obj, }
+    context = {'page_obj': page_obj}
     return render(request, 'posts/follow.html', context)
 
 
@@ -121,11 +120,8 @@ def follow_index(request):
 def profile_follow(request, username):
     '''View-функция для подписки.'''
     author = get_object_or_404(User, username=username)
-    if author != request.user and not Follow.objects.filter(
-        user=request.user,
-        author=author
-    ).exists():
-        Follow.objects.create(user=request.user, author=author)
+    if author != request.user:
+        Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('posts:profile', author)
 
 
@@ -133,6 +129,5 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     '''View-функция для отписки.'''
     author = get_object_or_404(User, username=username)
-    follower = Follow.objects.get(user=request.user, author=author)
-    follower.delete()
+    Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('posts:profile', author)
